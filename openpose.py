@@ -3,17 +3,17 @@ import numpy as np
 import argparse
 
 def hitung_tinggi_badan(pixel_objek, pixel_total, tinggi_kamera, jarak_kamera_ke_objek):
-    """
-    Fungsi ini menghitung tinggi objek dalam satuan yang sama dengan tinggi kamera dan jarak kamera ke objek.
-
-    :param pixel_objek: Jumlah pixel yang ditempati oleh objek (misalnya, orang).
-    :param pixel_total: Jumlah total pixel dalam gambar.
-    :param tinggi_kamera: Tinggi kamera dari tanah dalam meter.
-    :param jarak_kamera_ke_objek: Jarak antara kamera dan objek dalam meter.
-    :return: Tinggi objek dalam satuan yang sama dengan tinggi kamera dan jarak kamera ke objek.
-    """
     tinggi_objek = (pixel_objek / pixel_total) * (tinggi_kamera + jarak_kamera_ke_objek)
     return tinggi_objek
+
+def hitung_berat_badan_ideal(tinggi_badan_cm, jenis_kelamin):
+    if jenis_kelamin.lower() == 'pria':
+        berat_badan_ideal = (tinggi_badan_cm - 100) - ((tinggi_badan_cm - 100) * 0.10)
+    elif jenis_kelamin.lower() == 'wanita':
+        berat_badan_ideal = (tinggi_badan_cm - 100) - ((tinggi_badan_cm - 100) * 0.15)
+    else:
+        raise ValueError("Jenis kelamin tidak valid. Harap masukkan 'pria' atau 'wanita'.")
+    return berat_badan_ideal
 
 # Argument parser untuk pengaturan aplikasi
 parser = argparse.ArgumentParser()
@@ -21,8 +21,11 @@ parser.add_argument('--input', help='Path to image or video. Skip to capture fra
 parser.add_argument('--thr', default=0.2, type=float, help='Threshold value for pose parts heat map')
 parser.add_argument('--width', default=368, type=int, help='Resize input to specific width.')
 parser.add_argument('--height', default=368, type=int, help='Resize input to specific height.')
+parser.add_argument('--jenis_kelamin', required=True, choices=['pria', 'wanita'], help='Jenis kelamin (pria atau wanita)')
 
 args = parser.parse_args()
+
+berat_badan = 0.0
 
 # Daftar posisi tubuh dan hubungan antara posisi-posisi tersebut
 BODY_PARTS = {"Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4,
@@ -93,8 +96,8 @@ while True:
     if points[BODY_PARTS["Neck"]] and points[BODY_PARTS["LAnkle"]]:
         tinggi_badan_pixel = points[BODY_PARTS["LAnkle"]][1] - points[BODY_PARTS["Neck"]][1]
         tinggi_badan_cm = hitung_tinggi_badan(tinggi_badan_pixel, frameHeight, tinggi_kamera, jarak_kamera_ke_objek)
-        berat_badan = tinggi_badan_cm * 0.1  # Contoh perhitungan berat badan sederhana
-        cv.putText(frame, f'Tinggi: {tinggi_badan_cm:.2f} cm, Berat: {berat_badan:.2f} kg', (10, 30),
+        berat_badan_ideal = hitung_berat_badan_ideal(tinggi_badan_cm, args.jenis_kelamin)
+        cv.putText(frame, f'Tinggi: {tinggi_badan_cm:.2f} cm, Berat Ideal: {berat_badan_ideal:.2f} kg', (10, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
     # Menampilkan waktu eksekusi model OpenPose di layar
