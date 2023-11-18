@@ -4,6 +4,8 @@ import argparse
 
 def hitung_tinggi_badan(pixel_objek, pixel_total, tinggi_kamera, jarak_kamera_ke_objek):
     tinggi_objek = (pixel_objek / pixel_total) * (tinggi_kamera + jarak_kamera_ke_objek)
+    # print(f"pixel_objek: {pixel_objek}, pixel_total: {pixel_total}, tinggi_kamera: {tinggi_kamera}, jarak_kamera_ke_objek: {jarak_kamera_ke_objek}")
+
     return tinggi_objek
 
 def hitung_berat_badan_ideal(tinggi_badan_cm, jenis_kelamin):
@@ -62,6 +64,7 @@ while True:
     # Mendapatkan dimensi frame
     frameWidth = frame.shape[1]
     frameHeight = frame.shape[0]
+    # print(frameWidth, frameHeight)
 
     # Menyiapkan frame sebagai input untuk model OpenPose
     net.setInput(cv.dnn.blobFromImage(frame, 1.0, (inWidth, inHeight), (127.5, 127.5, 127.5), swapRB=True, crop=False))
@@ -95,9 +98,12 @@ while True:
     # Menghitung tinggi badan dari bagian atas kepala ke bagian bawah kaki
     if points[BODY_PARTS["Neck"]] and points[BODY_PARTS["LAnkle"]]:
         tinggi_badan_pixel = points[BODY_PARTS["LAnkle"]][1] - points[BODY_PARTS["Neck"]][1]
-        tinggi_badan_cm = hitung_tinggi_badan(tinggi_badan_pixel, frameHeight, tinggi_kamera, jarak_kamera_ke_objek)
-        berat_badan_ideal = hitung_berat_badan_ideal(tinggi_badan_cm, args.jenis_kelamin)
-        cv.putText(frame, f'Tinggi: {tinggi_badan_cm:.2f} cm, Berat Ideal: {berat_badan_ideal:.2f} kg', (10, 30),
+        tinggi_badan_m = hitung_tinggi_badan(tinggi_badan_pixel, frameHeight, tinggi_kamera, jarak_kamera_ke_objek)
+        print(f'Tinggi badan: {tinggi_badan_m}')
+        tinggi_badan_cm = tinggi_badan_m * 100
+        print(f'Tinggi badan: {tinggi_badan_cm}')
+        berat_badan_ideal = hitung_berat_badan_ideal((tinggi_badan_cm), args.jenis_kelamin)
+        cv.putText(frame, f'Tinggi: {tinggi_badan_m:.2f} cm, Berat Ideal: {berat_badan_ideal:.2f} kg', (10, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
     # Menampilkan waktu eksekusi model OpenPose di layar
